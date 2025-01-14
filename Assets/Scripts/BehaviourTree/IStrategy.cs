@@ -51,6 +51,50 @@ public class Condition : IStrategy
     }
 }
 
+public class MoveToTarget : IStrategy
+{
+    readonly Transform entity;
+    readonly NavMeshAgent agent;
+    readonly Transform targetPoint;
+    readonly float patrolSpeed;
+    bool isPathCalculated, targetReached;
+
+    public MoveToTarget(Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
+    {
+        this.entity = entity;
+        this.agent = agent;
+        this.targetPoint = targetPoint;
+        this.patrolSpeed = patrolSpeed;
+        this.agent.speed = patrolSpeed;
+    }
+
+    public Node.Status Process()
+    {
+        if(targetReached) return Node.Status.Success;
+        agent.SetDestination(targetPoint.position);
+        entity.LookAt(targetPoint);
+
+        if(isPathCalculated && agent.remainingDistance < 0.1f)
+        {
+            targetReached = true;
+            isPathCalculated = false;
+        }
+
+        if(agent.pathPending)
+        {
+            isPathCalculated = true;
+        }
+
+        return Node.Status.Running;
+    }
+
+    public void Reset()
+    {
+        targetReached = false;
+    }
+
+}
+
 public class PatrolStrategy : IStrategy
 {
     readonly Transform entity;
@@ -66,6 +110,7 @@ public class PatrolStrategy : IStrategy
         this.agent = agent;
         this.patrolPoints = patrolPoints;
         this.patrolSpeed = patrolSpeed;
+        this.agent.speed = patrolSpeed;
     }
 
     public Node.Status Process()

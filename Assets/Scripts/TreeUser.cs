@@ -11,7 +11,7 @@ public class TreeUser : MonoBehaviour
     [SerializeField] GameObject collectableObject, collectableObject2;
     NavMeshAgent agent;
     BehaviourTree tree;
-    bool isInDanger;
+    [SerializeField] bool isInDanger;
 
     private void Awake()
     {
@@ -94,12 +94,12 @@ public class TreeUser : MonoBehaviour
         //The sequence that makes the player move to object 1
         Sequence goToObject1 = new Sequence("GoToObject1");
             goToObject1.AddChild(new Leaf("IsObject1Present", new Condition(() => collectableObject.activeSelf)));
-            goToObject1.AddChild(new Leaf("GoToObject1", new ActionStrategy(() => agent.SetDestination(collectableObject.transform.position)))); 
+            goToObject1.AddChild(new Leaf("GoToObject1", new MoveToTarget(gameObject.transform, agent, collectableObject.transform, 2f))); 
             goToRandomObject.AddChild(goToObject1);
         //The sequence that makes the player move to object 2
         Sequence goToObject2 = new Sequence("GoToObject2");
             goToObject2.AddChild(new Leaf("IsObject2Present", new Condition(() => collectableObject2.activeSelf)));
-            goToObject2.AddChild(new Leaf("GoToObject2", new ActionStrategy(() => agent.SetDestination(collectableObject2.transform.position)))); 
+            goToObject2.AddChild(new Leaf("GoToObject2", new MoveToTarget(gameObject.transform, agent, collectableObject2.transform, 2f))); 
             goToRandomObject.AddChild(goToObject2);
 
         //Add the RandomSelector node to the agent's actions
