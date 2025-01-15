@@ -1,12 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
 public interface IStrategy
 {
-    Node.Status Process();
+    Node.Status Process(bool isInterrupted, string leafName);
     void Reset()
     {
         //Noop
@@ -22,7 +23,7 @@ public class ActionStrategy : IStrategy
         this.doSomething = doSomething; 
     }
 
-    public Node.Status Process()
+    public Node.Status Process(bool isInterrupted, string leafName)
     {
         doSomething();
         return Node.Status.Success;
@@ -38,7 +39,7 @@ public class Condition : IStrategy
         this.predicate = predicate;
     }
 
-    public Node.Status Process()
+    public Node.Status Process(bool isInterrupted, string leafName)
     {
         if (predicate())
         {
@@ -57,7 +58,7 @@ public class MoveToTarget : IStrategy
     readonly NavMeshAgent agent;
     readonly Transform targetPoint;
     readonly float patrolSpeed;
-    bool isPathCalculated, targetReached;
+    bool isPathCalculated;
 
     public MoveToTarget(Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
     {
@@ -66,17 +67,28 @@ public class MoveToTarget : IStrategy
         this.targetPoint = targetPoint;
         this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
+
+        Debug.Log("MoveToTarget constructor");
     }
 
-    public Node.Status Process()
+    public Node.Status Process(bool isInterrupted, string leafName)
     {
-        if(targetReached) return Node.Status.Success;
+        if(isInterrupted)
+        {
+            GameData.currentActiveLeaf = "";
+            return Node.Status.Failure; 
+        }
+        if(Vector3.Distance(entity.position, targetPoint.position) < 1f) 
+        {
+            GameData.currentActiveLeaf = "";
+            return Node.Status.Success;
+        }
+
         agent.SetDestination(targetPoint.position);
-        entity.LookAt(targetPoint);
+        entity.LookAt(targetPoint.position);
 
         if(isPathCalculated && agent.remainingDistance < 0.1f)
         {
-            targetReached = true;
             isPathCalculated = false;
         }
 
@@ -85,12 +97,14 @@ public class MoveToTarget : IStrategy
             isPathCalculated = true;
         }
 
+        Debug.Log("Current Strategy Name: " + leafName);
+        GameData.currentActiveLeaf = leafName;
         return Node.Status.Running;
     }
 
     public void Reset()
     {
-        targetReached = false;
+        isPathCalculated = false;
     }
 
 }
@@ -113,9 +127,15 @@ public class PatrolStrategy : IStrategy
         this.agent.speed = patrolSpeed;
     }
 
-    public Node.Status Process()
+    public Node.Status Process(bool isInterrupted, string leafName)
     {
-        if(currentIndex == patrolPoints.Count) return Node.Status.Success;
+        if(isInterrupted)
+        {
+            GameData.currentActiveLeaf = "";
+            return Node.Status.Failure; 
+        }
+
+        if(currentIndex == patrolPoints.Count) currentIndex = 0;
         Transform target = patrolPoints[currentIndex];
         agent.SetDestination(target.position);
         entity.LookAt(target);
@@ -131,6 +151,7 @@ public class PatrolStrategy : IStrategy
             isPathCalculated = true;
         }
 
+        GameData.currentActiveLeaf = leafName;
         return Node.Status.Running;
     }
 

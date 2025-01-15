@@ -9,9 +9,9 @@ public class UntilFail : Node
 
     }
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted)
     {
-        if(children[0].Process() == Status.Failure)
+        if(children[0].Process(isInterrupted) == Status.Failure)
         {
             Reset();
             return Status.Failure;

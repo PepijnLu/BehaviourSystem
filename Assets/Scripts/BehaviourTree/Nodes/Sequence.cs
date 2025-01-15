@@ -9,11 +9,11 @@ public class Sequence : Node
 
     }
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted)
     {
         if(currentChild < children.Count)
         {
-            switch(children[currentChild].Process())
+            switch(children[currentChild].Process(isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;
@@ -25,6 +25,7 @@ public class Sequence : Node
                     //return currentChild == children.Count ? Status.Success : Status.Running;
                     if (currentChild == children.Count)
                     {
+                        Debug.Log($"Sequence {name} completed");
                         return Status.Success;
                     }
                     else
@@ -35,6 +36,7 @@ public class Sequence : Node
         }
 
         Reset();
+        Debug.Log($"Sequence {name} completed");
         return Status.Success;
     }
 }

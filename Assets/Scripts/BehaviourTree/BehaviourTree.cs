@@ -10,11 +10,11 @@ public class BehaviourTree : Node
 
     }
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted = false)
     {
         while (currentChild < children.Count)
         {
-            Status status = children[currentChild].Process();
+            Status status = children[currentChild].Process(isInterrupted);
             if(status != Status.Success)
             {
                 return status;

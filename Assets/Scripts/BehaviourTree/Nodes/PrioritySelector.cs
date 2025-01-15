@@ -44,21 +44,23 @@ public class PrioritySelector : Selector
         sortedChildren = null;
     }
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted)
     {
         foreach(Node child in SortedChildren())
         {
-            switch(child.Process())
+            switch(child.Process(isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;
                 case Status.Success:
+                    Reset();
                     return Status.Success;
                 default:
                     continue;
             }
         }
 
+        Reset();
         return Status.Failure;
     }
 }

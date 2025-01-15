@@ -12,10 +12,11 @@ public class Node
     public enum Status { Success, Failure, Running }
 
     public readonly string name;
-    public readonly int priority;
+    public int priority;
 
     public readonly List<Node> children = new();
-    protected int currentChild;
+    //public for debugging
+    public int currentChild;
 
     public Node(string name = "Node", int priority = 0) 
     {
@@ -28,9 +29,9 @@ public class Node
         children.Add(child);
     }
 
-    public virtual Status Process() 
+    public virtual Status Process(bool isInterrupted = false) 
     {
-        return children[currentChild].Process();
+        return children[currentChild].Process(isInterrupted);
     }
 
     public virtual void Reset()

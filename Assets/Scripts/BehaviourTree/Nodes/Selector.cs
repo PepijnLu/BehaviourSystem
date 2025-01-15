@@ -9,11 +9,11 @@ public class Selector : Node
 
     }
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted)
     {
         if(currentChild < children.Count)
         {
-            switch(children[currentChild].Process())
+            switch(children[currentChild].Process(isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;

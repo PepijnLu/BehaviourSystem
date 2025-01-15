@@ -7,12 +7,12 @@ public class Inverter : Node
     public Inverter(string name) : base(name)
     {
 
-    }
+    }   
 
-    public override Status Process()
+    public override Status Process(bool isInterrupted)
     {
         //Possibly extend this to work for multiple children
-        switch(children[0].Process())
+        switch(children[0].Process(isInterrupted))
         {
             case Status.Running:
                 return Status.Running;
