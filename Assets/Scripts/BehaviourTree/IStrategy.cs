@@ -109,6 +109,63 @@ public class MoveToTarget : IStrategy
 
 }
 
+public class AttackTarget : IStrategy
+{
+    readonly Transform entity;
+    readonly NavMeshAgent agent;
+    readonly Transform targetPoint;
+    readonly float patrolSpeed;
+    bool isPathCalculated;
+
+    public AttackTarget(Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
+    {
+        this.entity = entity;
+        this.agent = agent;
+        this.targetPoint = targetPoint;
+        this.patrolSpeed = patrolSpeed;
+        this.agent.speed = patrolSpeed;
+
+        //Debug.Log("MoveToTarget constructor");
+    }
+
+    public Node.Status Process(bool isInterrupted, string leafName)
+    {
+        if(isInterrupted)
+        {
+            GameData.currentActiveLeaf = "";
+            return Node.Status.Failure; 
+        }
+        if(Vector3.Distance(entity.position, targetPoint.position) < 1f) 
+        {
+            GameData.currentActiveLeaf = "";
+            return Node.Status.Success;
+        }
+
+        agent.SetDestination(targetPoint.position);
+        entity.LookAt(targetPoint.position);
+
+        if(isPathCalculated && agent.remainingDistance < 0.1f)
+        {
+            isPathCalculated = false;
+        }
+
+        if(agent.pathPending)
+        {
+            isPathCalculated = true;
+        }
+
+        Debug.Log("Current Strategy Name: " + leafName);
+        GameData.currentActiveLeaf = leafName;
+        return Node.Status.Running;
+    }
+
+    public void Reset()
+    {
+        isPathCalculated = false;
+    }
+
+}
+
 public class PatrolStrategy : IStrategy
 {
     readonly Transform entity;
@@ -116,7 +173,7 @@ public class PatrolStrategy : IStrategy
     readonly List<Transform> patrolPoints;
     readonly float patrolSpeed;
     int currentIndex;
-    bool isPathCalculated;
+    bool isPathCalculated, onFirstRoute;
 
     public PatrolStrategy(Transform entity, NavMeshAgent agent, List<Transform> patrolPoints, float patrolSpeed)
     {
@@ -125,6 +182,7 @@ public class PatrolStrategy : IStrategy
         this.patrolPoints = patrolPoints;
         this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
+        onFirstRoute = true;
     }
 
     public Node.Status Process(bool isInterrupted, string leafName)
@@ -140,17 +198,21 @@ public class PatrolStrategy : IStrategy
         agent.SetDestination(target.position);
         entity.LookAt(target);
 
+        Debug.Log("Current patrol isPathCalculated: " + isPathCalculated);
+
         if(isPathCalculated && agent.remainingDistance < 0.1f)
         {
             currentIndex++;
+            onFirstRoute = false;
             isPathCalculated = false;
         }
 
-        if(agent.pathPending)
+        if(agent.pathPending || onFirstRoute)
         {
             isPathCalculated = true;
         }
 
+        Debug.Log("Current patrol point index: " + currentIndex);
         GameData.currentActiveLeaf = leafName;
         return Node.Status.Running;
     }
