@@ -4,5 +4,6 @@ using UnityEngine;
 
 public static class GameData
 {
-    public static string currentActiveLeaf = "";
+    //public static string currentActiveLeaf = "";
+
 }

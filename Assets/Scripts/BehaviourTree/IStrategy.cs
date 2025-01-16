@@ -54,19 +54,21 @@ public class Condition : IStrategy
 
 public class MoveToTarget : IStrategy
 {
+    readonly IAgent runner;
     readonly Transform entity;
     readonly NavMeshAgent agent;
     readonly Transform targetPoint;
     readonly float patrolSpeed;
     bool isPathCalculated;
 
-    public MoveToTarget(Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
+    public MoveToTarget(IAgent runner, Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
     {
         this.entity = entity;
         this.agent = agent;
         this.targetPoint = targetPoint;
         this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
+        this.runner = runner;
 
         Debug.Log("MoveToTarget constructor");
     }
@@ -75,12 +77,13 @@ public class MoveToTarget : IStrategy
     {
         if(isInterrupted)
         {
-            GameData.currentActiveLeaf = "";
+            Reset();
             return Node.Status.Failure; 
         }
+
         if(Vector3.Distance(entity.position, targetPoint.position) < 1f) 
         {
-            GameData.currentActiveLeaf = "";
+            Reset();
             return Node.Status.Success;
         }
 
@@ -98,12 +101,15 @@ public class MoveToTarget : IStrategy
         }
 
         Debug.Log("Current Strategy Name: " + leafName);
-        GameData.currentActiveLeaf = leafName;
+        runner.setCurrentActiveLeaf(leafName);
+        if(runner.getDisplayText().text != "Current Action: " + GetType().Name) runner.getDisplayText().text = "Current Action: " + GetType().Name;
         return Node.Status.Running;
     }
 
     public void Reset()
     {
+        runner.setCurrentActiveLeaf("");
+        if(runner.getDisplayText().text != "") runner.getDisplayText().text = "";
         isPathCalculated = false;
     }
 
@@ -111,19 +117,28 @@ public class MoveToTarget : IStrategy
 
 public class AttackTarget : IStrategy
 {
+    readonly IAgent runner;
     readonly Transform entity;
     readonly NavMeshAgent agent;
     readonly Transform targetPoint;
+    readonly IEnemyAttackable enemyAttackable;
     readonly float patrolSpeed;
     bool isPathCalculated;
 
-    public AttackTarget(Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
+    public AttackTarget(IAgent runner, Transform entity, NavMeshAgent agent, Transform targetPoint, float patrolSpeed)
     {
         this.entity = entity;
         this.agent = agent;
         this.targetPoint = targetPoint;
         this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
+        this.runner = runner;
+
+        if(targetPoint.TryGetComponent(out IEnemyAttackable _enemyAttackable))
+        {   
+            enemyAttackable = _enemyAttackable;
+        }
+        else throw new Exception("Enemy attacking something they shouldn't be");
 
         //Debug.Log("MoveToTarget constructor");
     }
@@ -132,14 +147,17 @@ public class AttackTarget : IStrategy
     {
         if(isInterrupted)
         {
-            GameData.currentActiveLeaf = "";
+            Reset();
             return Node.Status.Failure; 
         }
+
         if(Vector3.Distance(entity.position, targetPoint.position) < 1f) 
         {
-            GameData.currentActiveLeaf = "";
+            Reset();
             return Node.Status.Success;
         }
+
+        enemyAttackable.SetAttackingAgent(runner, true);
 
         agent.SetDestination(targetPoint.position);
         entity.LookAt(targetPoint.position);
@@ -155,12 +173,16 @@ public class AttackTarget : IStrategy
         }
 
         Debug.Log("Current Strategy Name: " + leafName);
-        GameData.currentActiveLeaf = leafName;
+        runner.setCurrentActiveLeaf(leafName);
+        if(runner.getDisplayText().text != "Current Action: " + GetType().Name) runner.getDisplayText().text = "Current Action: " + GetType().Name;
         return Node.Status.Running;
     }
 
     public void Reset()
     {
+        enemyAttackable.SetAttackingAgent(runner, false);
+        runner.setCurrentActiveLeaf("");
+        if(runner.getDisplayText().text != "") runner.getDisplayText().text = "";
         isPathCalculated = false;
     }
 
@@ -174,14 +196,16 @@ public class PatrolStrategy : IStrategy
     readonly float patrolSpeed;
     int currentIndex;
     bool isPathCalculated, onFirstRoute;
+    IAgent runner;
 
-    public PatrolStrategy(Transform entity, NavMeshAgent agent, List<Transform> patrolPoints, float patrolSpeed)
+    public PatrolStrategy(IAgent runner, Transform entity, NavMeshAgent agent, List<Transform> patrolPoints, float patrolSpeed)
     {
         this.entity = entity;
         this.agent = agent;
         this.patrolPoints = patrolPoints;
         this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
+        this.runner = runner;
         onFirstRoute = true;
     }
 
@@ -189,7 +213,7 @@ public class PatrolStrategy : IStrategy
     {
         if(isInterrupted)
         {
-            GameData.currentActiveLeaf = "";
+            Reset();
             return Node.Status.Failure; 
         }
 
@@ -213,12 +237,15 @@ public class PatrolStrategy : IStrategy
         }
 
         Debug.Log("Current patrol point index: " + currentIndex);
-        GameData.currentActiveLeaf = leafName;
+        runner.setCurrentActiveLeaf(leafName);
+        if(runner.getDisplayText().text != "Current Action: " + GetType().Name) runner.getDisplayText().text = "Current Action: " + GetType().Name;
         return Node.Status.Running;
     }
 
     public void Reset()
     {
+        runner.setCurrentActiveLeaf("");
+        if(runner.getDisplayText().text != "") runner.getDisplayText().text = "";
         currentIndex = 0;
     }
     

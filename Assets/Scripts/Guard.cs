@@ -5,20 +5,24 @@ using System.Linq;
 using Palmmedia.ReportGenerator.Core.Reporting.Builders;
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
-public class TreeUser : MonoBehaviour
+public class Guard : MonoBehaviour, IAgent
 {
     [SerializeField] List<Transform> waypoints = new();
     [SerializeField] Transform safeSpot, weaponLocation, raycastOrigin;
     [SerializeField] GameObject collectableObject, collectableObject2, player;
     [SerializeField] LayerMask playerLayer;
     [SerializeField] float attackRange, chaseRange = 5;
+    [SerializeField] TextMeshProUGUI displayText;
     NavMeshAgent agent;
     BehaviourTree tree;
     [SerializeField] Weapon weaponToGet;
     [SerializeField] bool isInDanger;
     bool hasWeapon;
     Dictionary<string, Func<bool>> strategyBreaks;
+    public string currentActiveLeaf;
+    IAgent chasedAgent;
 
     private void Awake()
     {
@@ -27,11 +31,29 @@ public class TreeUser : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         tree = new BehaviourTree(GetType().Name);
 
-        //Complex behaviour
-        //ComplexBehaviour();
         //Guard Enemy Behaviour
         GuardBehaviour();
         AddStrategyBreaks();
+    }
+
+    TextMeshProUGUI IAgent.getDisplayText()
+    {
+        return displayText;
+    }
+
+    void IAgent.setIsInDanger(bool _isInDanger)
+    {
+        isInDanger = _isInDanger;
+    }
+
+    void IAgent.setCurrentActiveLeaf(string leafName)
+    {
+        currentActiveLeaf = leafName;
+    }
+
+    Transform IAgent.getTransform()
+    {
+        return transform;
     }
 
     private void GuardBehaviour()
@@ -41,25 +63,17 @@ public class TreeUser : MonoBehaviour
         Sequence tryAddWeapon = new Sequence("TryAddWeapon", 15);
             tryAddWeapon.AddChild(new Leaf("CheckIfHasWeapon", new Condition(() => !hasWeapon)));
             tryAddWeapon.AddChild(new Leaf("FindClosestWeapon", new ActionStrategy(() => weaponLocation.position = GetClosestWeapon().transform.position)));
-            tryAddWeapon.AddChild(new Leaf("MoveToWeapon", new MoveToTarget(gameObject.transform, agent, weaponLocation, 5f)));
+            tryAddWeapon.AddChild(new Leaf("MoveToWeapon", new MoveToTarget(this, gameObject.transform, agent, weaponLocation, 5f)));
             tryAddWeapon.AddChild(new Leaf("Pickup Weapon", new ActionStrategy(() => hasWeapon = true)));
-
-        // Sequence tryChasePlayer = new Sequence("TryChasePlayer", 5);
-        //     tryAddWeapon.AddChild(new Leaf("CheckHasWeapon", new Condition(() => hasWeapon)));
-        //     tryAddWeapon.AddChild(new Leaf("MoveToPlayer", new MoveToTarget(gameObject.transform, agent, player.transform, 5f)));
 
         Sequence attackPlayer = new Sequence("AttackPlayer", 10);
             attackPlayer.AddChild(new Leaf("CheckInAttackRange", new Condition(() => CalculateDistanceToPlayer() <= attackRange)));
-            attackPlayer.AddChild(new Leaf("AttackPlayer", new AttackTarget(gameObject.transform, agent, player.transform, 5f)));
+            attackPlayer.AddChild(new Leaf("AttackPlayer", new AttackTarget(this, gameObject.transform, agent, player.transform, 5f)));
 
         Sequence chasePlayer = new Sequence("ChasePlayer", 5);
             chasePlayer.AddChild(new Leaf("CheckInChaseRange", new Condition(() => CalculateDistanceToPlayer() <= chaseRange)));
-            chasePlayer.AddChild(new Leaf("MoveToPlayer", new MoveToTarget(gameObject.transform, agent, player.transform, 5f)));
+            chasePlayer.AddChild(new Leaf("MoveToPlayer", new MoveToTarget(this, gameObject.transform, agent, player.transform, 5f)));
 
-        // PrioritySelector chaseOrAttackPlayer = new PrioritySelector("ChaseOrAttackPlayer", 5);
-        //     chaseOrAttackPlayer.AddChild(attackPlayer);
-        //     chaseOrAttackPlayer.AddChild(chasePlayer);
-        
         PrioritySelector grabWeaponOrChase = new PrioritySelector("GrabWeaponOrChase", 10);
             grabWeaponOrChase.AddChild(tryAddWeapon);
             grabWeaponOrChase.AddChild(attackPlayer);
@@ -67,6 +81,8 @@ public class TreeUser : MonoBehaviour
         
         Sequence tryNoticePlayer = new Sequence("NoticePlayer", 10);
             tryNoticePlayer.AddChild(new Leaf("CanSeePlayer", new Condition(() => TryHitRaycast())));
+            tryNoticePlayer.AddChild(new Leaf("SetChasedAgent", new ActionStrategy(() => chasedAgent = transform.gameObject.GetComponent<IAgent>())));
+            tryNoticePlayer.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => chasedAgent.setIsInDanger(true))));
             tryNoticePlayer.AddChild(grabWeaponOrChase);
 
         actions.AddChild(tryNoticePlayer);
@@ -75,7 +91,11 @@ public class TreeUser : MonoBehaviour
 
 
         //Patrol leaf with the default priority of 0
-        Leaf patrol = new Leaf("Patrol", new PatrolStrategy(transform, agent, waypoints, 2f));
+        Sequence patrol = new Sequence("Patrol");
+            patrol.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => chasedAgent.setIsInDanger(false))));
+            patrol.AddChild(new Leaf("SetChasedAgent", new ActionStrategy(() => chasedAgent = null)));
+            patrol.AddChild(new Leaf("Patrol", new PatrolStrategy(this, transform, agent, waypoints, 2f)));
+        // Leaf patrol = new Leaf("Patrol", new PatrolStrategy(this, transform, agent, waypoints, 2f));
         actions.AddChild(patrol);
 
         tree.AddChild(actions);
@@ -94,27 +114,35 @@ public class TreeUser : MonoBehaviour
         RaycastHit hit;
         Debug.DrawRay(startPos, direction, Color.red);
 
-        if (Physics.Raycast(startPos, direction, out hit, Mathf.Infinity, playerLayer))
+        if (Physics.Raycast(startPos, direction, out hit, Mathf.Infinity))
         {
             // Draw the raycast in the scene view for visualization
             //Debug.DrawRay(startPos, direction, Color.red);
 
-            // Calculate the angle between objectA's forward vector and the direction to objectB
-            float angle = Vector3.Angle(transform.forward, direction);
-
-            // Log the angle to the console
-            Debug.Log("Angle between ObjectA's forward vector and the direction to ObjectB: " + angle + " degrees");
-
-            if(angle < 180)
+            if (hit.collider.gameObject.layer != 8) 
             {
-                Debug.Log("Guard hits raycast");
-                return true;
+                Debug.Log("Raycast Hit Object: " + hit.collider.gameObject.name);
+                Debug.Log("Raycast Hit Layer: " + hit.collider.gameObject.layer);
+                return false;
             }
             else
             {
-                return false;
-            }
-            
+                // Calculate the angle between objectA's forward vector and the direction to objectB
+                float angle = Vector3.Angle(transform.forward, direction);
+
+                // Log the angle to the console
+                Debug.Log("Angle between ObjectA's forward vector and the direction to ObjectB: " + angle + " degrees");
+
+                if(angle < 180)
+                {
+                    Debug.Log("Guard hits raycast");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            } 
         }
         else
         {
@@ -145,75 +173,19 @@ public class TreeUser : MonoBehaviour
         return closestObject;
     } 
 
-    private void ComplexBehaviour()
-    {
-        //All the actions of the agent
-        PrioritySequence actions = new PrioritySequence("Agent Logic");
-
-        //The sequence that makes the agent run to safety
-        Sequence runToSafety = new Sequence("RunToSafety", 100);
-
-        //Function that checks if the agent is in danger (if not, reset the runToSafety sequence)
-        bool IsInDanger()
-        {
-            if(!isInDanger)
-            {
-                runToSafety.Reset();
-                return false;
-            }
-            return true;
-        }
-
-        //Add the necessary leaf nodes to the runToSafety sequence
-        runToSafety.AddChild(new Leaf("isInDanger?", new Condition(IsInDanger)));
-        //runToSafety.AddChild(new Leaf("SetRunToSafetyTrue", new ActionStrategy(() => runningToSafety = true))); 
-        runToSafety.AddChild(new Leaf("GoToSafety", new MoveToTarget(gameObject.transform, agent, safeSpot.transform, 5f)));
-        //runToSafety.AddChild(new Leaf("SetRunToSafetyFalse", new ActionStrategy(() => runningToSafety = false))); 
-        // runToSafety.priority = 0;
-        
-        //Add the runToSafety sequence to the agent's actions
-        actions.AddChild(runToSafety);
-
-        //Random Selector node that makes the agent go to object 1 or 2
-        Selector goToRandomObject = new RandomSelector("GoToRandomObject", 50);
-        
-        //The sequence that makes the player move to object 1
-        Sequence goToObject1 = new Sequence("GoToObject1");
-            goToObject1.AddChild(new Leaf("IsObject1Present", new Condition(() => collectableObject.activeSelf)));
-            goToObject1.AddChild(new Leaf("GoToObject1", new MoveToTarget(gameObject.transform, agent, collectableObject.transform, 5)));
-            goToObject1.AddChild(new Leaf("PickUpObject1", new ActionStrategy(() => collectableObject.SetActive(false)))); 
-            goToRandomObject.AddChild(goToObject1);
-        //The sequence that makes the player move to object 2
-        Sequence goToObject2 = new Sequence("GoToObject2");
-            goToObject2.AddChild(new Leaf("IsObject2Present", new Condition(() => collectableObject2.activeSelf)));
-            goToObject2.AddChild(new Leaf("GoToObject2", new MoveToTarget(gameObject.transform, agent, collectableObject2.transform, 5)));
-            goToObject2.AddChild(new Leaf("PickUpObject2", new ActionStrategy(() => collectableObject2.SetActive(false)))); 
-            goToRandomObject.AddChild(goToObject2);
-
-        //Add the RandomSelector node to the agent's actions
-        actions.AddChild(goToRandomObject);
-
-        //Patrol leaf with the default priority of 0
-        Leaf patrol = new Leaf("Patrol", new PatrolStrategy(transform, agent, waypoints, 2f));
-        actions.AddChild(patrol);
-
-        //Add the actions PrioritySelector to the tree
-        tree.AddChild(actions);
-    }
-
-
     private void Update()
     {
         bool interrupt = CheckStrategyBreaks();
         Debug.Log($"Interrupt? {interrupt}");
         tree.Process(interrupt);
+        TryHitRaycast();
     }
 
     bool CheckStrategyBreaks()
     {
-        Debug.Log("Current Active Leaf: " + GameData.currentActiveLeaf);
-        if(!strategyBreaks.ContainsKey(GameData.currentActiveLeaf)) return false;
-        if(strategyBreaks[GameData.currentActiveLeaf]()) return true;
+        Debug.Log("Current Active Leaf: " + currentActiveLeaf);
+        if(!strategyBreaks.ContainsKey(currentActiveLeaf)) return false;
+        if(strategyBreaks[currentActiveLeaf]()) return true;
         return false;
     }
 
