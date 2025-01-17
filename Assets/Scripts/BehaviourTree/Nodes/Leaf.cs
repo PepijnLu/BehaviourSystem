@@ -6,7 +6,7 @@ using UnityEngine;
 public class Leaf : Node
 {
     readonly IStrategy strategy;
-    readonly string name;
+    new readonly string name;
 
     public Leaf(string name, IStrategy strategy, int priority = 0) : base(name, priority)
     {

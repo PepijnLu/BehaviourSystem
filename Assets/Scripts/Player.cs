@@ -7,52 +7,47 @@ using UnityEngine.AI;
 
 public class Player : MonoBehaviour, IAgent, IEnemyAttackable
 {
-    public Camera mainCamera; // Reference to the main camera
-    public NavMeshAgent playerAgent; // Reference to the NavMeshAgent component on the player
-    public List<IAgent> attackingAgents = new();
+    public Camera mainCamera;
+    public NavMeshAgent playerAgent; 
+    public List<GameObject> attackingAgents = new();
     public bool isInDanger, isBeingAttacked;
+    [SerializeField] LayerMask ground;
 
-    // Start is called before the first frame update
     void Start()
     {
         
     }
 
-    // Update is called once per frame
     void Update()
     {
-        // Check for mouse input
-        if (Input.GetMouseButtonDown(0)) // Left mouse button
+        MovePlayer();
+    }
+
+    void MovePlayer()
+    {
+        if (Input.GetMouseButtonDown(0)) 
         {
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // Check if the ray hits the ground
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, ground))
             {
-                // Move the player to the clicked position
                 playerAgent.SetDestination(hit.point);
             }
         }
     }
-
-    TextMeshProUGUI IAgent.getDisplayText()
-    {
-        return null;   
-    }
-
-    //string getCurrentActiveLeaf();
-    void IAgent.setCurrentActiveLeaf(string leafName)
-    {
-        //Noop
-    }
     
-    void IAgent.setIsInDanger(bool _isInDanger)
+    void IEnemyAttackable.setIsInDanger(bool _isInDanger)
     {
         isInDanger = _isInDanger;
     }
 
-    void IEnemyAttackable.SetAttackingAgent(IAgent agent, bool add)
+    void IEnemyAttackable.setIsBeingAttacked(bool _isBeingAttacked)
+    {
+        isBeingAttacked = _isBeingAttacked;
+    }
+
+    void IEnemyAttackable.SetAttackingAgent(GameObject agent, bool add)
     {
         if(add)
         {
@@ -69,11 +64,50 @@ public class Player : MonoBehaviour, IAgent, IEnemyAttackable
             }
         }
 
-        if(attackingAgents.Count > 0) isBeingAttacked = true;
+        if(attackingAgents.Count > 0) isInDanger = true;
+    }
+    GameObject IEnemyAttackable.GetAttackingAgent()
+    {
+        if(attackingAgents.Count <= 0) return null;
+        return attackingAgents[0];
     }
     Transform IAgent.getTransform()
     {
+        return transform;
+    }
+
+    Transform IEnemyAttackable.getTransform()
+    {
+        return transform;
+    }
+
+    bool IEnemyAttackable.getIsBeingAttacked()
+    {
+        return isBeingAttacked;
+    }
+
+    Weapon IAgent.GetWeapon()
+    {
         return null;
+    }
+    TextMeshProUGUI IAgent.getDisplayText()
+    {
+        return null;   
+    }
+
+    void IAgent.setIsStunned()
+    {
+        //Noop
+    }
+
+    void IAgent.DropWeapon()
+    {
+        //Noop
+    }
+
+    void IAgent.setCurrentActiveLeaf(string leafName)
+    {
+        //Noop
     }
 }
 

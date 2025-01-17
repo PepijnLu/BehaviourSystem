@@ -4,18 +4,12 @@ using UnityEngine;
 
 public class Node
 {
-    /*
-    Node Suggestions:
-    -UntilSuccess
-    -Repeat
-    */
     public enum Status { Success, Failure, Running }
 
     public readonly string name;
     public int priority;
 
     public readonly List<Node> children = new();
-    //public for debugging
     public int currentChild;
 
     public Node(string name = "Node", int priority = 0) 

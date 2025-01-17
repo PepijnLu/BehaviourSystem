@@ -6,9 +6,9 @@ using UnityEngine;
 public interface IAgent
 {
     TextMeshProUGUI getDisplayText();
-
-    //string getCurrentActiveLeaf();
     void setCurrentActiveLeaf(string leafName);
-    void setIsInDanger(bool _isInDanger);
     Transform getTransform();
+    void setIsStunned();
+    void DropWeapon();
+    Weapon GetWeapon();
 }
