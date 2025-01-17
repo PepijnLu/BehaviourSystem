@@ -4,16 +4,13 @@ using UnityEngine;
 
 public class Selector : Node
 {
-    public Selector(string name, int priority = 0) : base(name, priority)
-    {
+    public Selector(string _name, int _priority = 0) : base(_name, _priority) {}
 
-    }
-
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
         if(currentChild < children.Count)
         {
-            switch(children[currentChild].Process(isInterrupted))
+            switch(children[currentChild].Process(_isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;

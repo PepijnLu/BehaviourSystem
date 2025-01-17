@@ -8,23 +8,20 @@ using TMPro;
 
 public class Ninja : MonoBehaviour, IAgent
 {
-    [SerializeField] GameObject smokeGrenade;
-    [SerializeField] LayerMask ignoreInRaycast;
-    [SerializeField]Transform nearestCover;
-    Vector3 nearestCoverLocation;
-    [SerializeField] GameObject agentToHelp;
-    Player playerAgent;
-    IEnemyAttackable iPlayerAgent;
+    [SerializeField] GameObject smokeGrenade, agentToHelp;
+    [SerializeField] LayerMask ignoreInRaycast; 
+    [SerializeField] Transform nearestCover;
     [SerializeField] List<GameObject> enemiesAttackingWard = new();
     [SerializeField] TextMeshProUGUI displayText;
-    [SerializeField] float hoverRangeMin, hoverRangeMax;
-    NavMeshAgent agent;
-    BehaviourTree tree;
-    Dictionary<string, Func<bool>> strategyBreaks;
-    public string currentActiveLeaf;
-    GameObject[] covers;
-    bool isBehindCover;
+    [SerializeField] private float hoverRangeMin, hoverRangeMax;
+    private Dictionary<string, Func<bool>> strategyBreaks;
+    private IEnemyAttackable iPlayerAgent;
+    private NavMeshAgent agent;
+    private BehaviourTree tree;
+    private GameObject[] covers;
+    private bool firedProjectile;
     public float arcHeight = 5f, speed = 10f;
+    public string currentActiveLeaf;
 
     private void Awake()
     {
@@ -39,7 +36,7 @@ public class Ninja : MonoBehaviour, IAgent
             Debug.Log("Player Agent = " + iPlayerAgent);
         }
 
-        //Guard Enemy Behaviour
+        //Ninja Behaviour
         NinjaBehaviour();
         AddStrategyBreaks();
     }
@@ -47,7 +44,7 @@ public class Ninja : MonoBehaviour, IAgent
     private void Update()
     {
         enemiesAttackingWard = GetAttackingEnemies();
-        bool interrupt = CheckStrategyBreaks();;
+        bool interrupt = CheckStrategyBreaks();
         tree.Process(interrupt); 
     }
 
@@ -59,11 +56,11 @@ public class Ninja : MonoBehaviour, IAgent
             moveToCover.AddChild(new Leaf("CheckDangerAndCover", new Condition(() => DetectDanger())));
             moveToCover.AddChild(new Leaf("MoveToCover", new MoveToTarget(gameObject, gameObject.transform, agent, nearestCover, 5f)));
             moveToCover.AddChild(new Leaf("ThrowGrenade", new ActionStrategy(() => FireProjectile())));
-            moveToCover.AddChild(new Leaf("FollowPlayer", new MoveToTarget(gameObject, gameObject.transform, agent, iPlayerAgent.getTransform(), 5f)));
+            moveToCover.AddChild(new Leaf("FollowPlayer", new MoveToTarget(gameObject, gameObject.transform, agent, iPlayerAgent.GetTransform(), 5f)));
 
         Sequence followPlayer = new Sequence("FollowPlayer", 5);
             followPlayer.AddChild(new Leaf("CheckInHoverRange", new Condition(() => CalculateDistanceToPlayer() >= hoverRangeMin)));
-            followPlayer.AddChild(new Leaf("FollowPlayer", new MoveToTarget(gameObject, gameObject.transform, agent, iPlayerAgent.getTransform(), 5f)));
+            followPlayer.AddChild(new Leaf("FollowPlayer", new MoveToTarget(gameObject, gameObject.transform, agent, iPlayerAgent.GetTransform(), 5f)));
 
         Sequence idle = new Sequence("Idle");
             idle.AddChild(new Leaf("Idle", new Idle(gameObject, agent)));
@@ -89,16 +86,18 @@ public class Ninja : MonoBehaviour, IAgent
 
         if (smokeGrenade != null && target != null)
         {
+            firedProjectile = true;
             GameObject projectile = Instantiate(smokeGrenade, transform.position, Quaternion.identity);
             StartCoroutine(TravelInArc(projectile, target));
         }
     }
     bool DetectDanger()
     {
+        if(firedProjectile) return false;
         Debug.Log("Detecting Danger");
         if(iPlayerAgent != null)
         {
-            if(!iPlayerAgent.getIsBeingAttacked()) 
+            if(!iPlayerAgent.GetIsBeingAttacked()) 
             {
                 Debug.Log($"Player not being attacked -{gameObject.name}");
                 return false;
@@ -146,8 +145,8 @@ public class Ninja : MonoBehaviour, IAgent
 
     float CalculateDistanceToPlayer()
     {
-        Debug.Log("Player Agent Distance = " + (transform.position - iPlayerAgent.getTransform().position).magnitude);
-        return (transform.position - iPlayerAgent.getTransform().position).magnitude;
+        Debug.Log("Player Agent Distance = " + (transform.position - iPlayerAgent.GetTransform().position).magnitude);
+        return (transform.position - iPlayerAgent.GetTransform().position).magnitude;
     }
 
     bool CheckStrategyBreaks()
@@ -156,20 +155,6 @@ public class Ninja : MonoBehaviour, IAgent
         if(!strategyBreaks.ContainsKey(currentActiveLeaf)) return false;
         if(strategyBreaks[currentActiveLeaf]()) return true;
         return false;
-    }
-    Transform IAgent.getTransform()
-    {
-        return transform;
-    }
-
-    TextMeshProUGUI IAgent.getDisplayText()
-    {
-        return displayText;
-    }
-
-    void IAgent.setCurrentActiveLeaf(string leafName)
-    {
-        currentActiveLeaf = leafName;
     }
 
     bool TryHitRaycast(Transform _startPos, Transform _endPos, GameObject objectToHit)
@@ -199,12 +184,6 @@ public class Ninja : MonoBehaviour, IAgent
 
         return false;
     }
-
-    Weapon IAgent.GetWeapon()
-    {
-        return null;
-    }
-
 
     List<GameObject> GetAttackingEnemies()
     {
@@ -246,14 +225,34 @@ public class Ninja : MonoBehaviour, IAgent
 
         if(enemiesAttackingWard.Count > 0)
         {
-            enemiesAttackingWard[0].GetComponent<IAgent>().setIsStunned();
+            enemiesAttackingWard[0].GetComponent<IAgent>().SetIsStunned();
+            firedProjectile = false;
             Debug.Log("Stun the enemy: " + enemiesAttackingWard[0].name);
         }
 
         Destroy(projectile);
     }
+    void IAgent.SetCurrentActiveLeaf(string leafName)
+    {
+        currentActiveLeaf = leafName;
+    }
 
-    void IAgent.setIsStunned()
+    Transform IAgent.GetTransform()
+    {
+        return transform;
+    }
+
+    TextMeshProUGUI IAgent.GetDisplayText()
+    {
+        return displayText;
+    }
+    Weapon IAgent.GetWeapon()
+    {
+        //Noop
+        return null;
+    }
+
+    void IAgent.SetIsStunned()
     {
         //Noop
     }

@@ -7,33 +7,31 @@ public class Node
     public enum Status { Success, Failure, Running }
 
     public readonly string name;
-    public int priority;
-
+    public int priority, currentChild;
     public readonly List<Node> children = new();
-    public int currentChild;
 
-    public Node(string name = "Node", int priority = 0) 
+    public Node(string _name = "Node", int _priority = 0) 
     {
-        this.name = name;
-        this.priority = priority;
+        name = _name;
+        priority = _priority;
     }
 
-    public void AddChild(Node child)
+    public void AddChild(Node _child)
     {
-        children.Add(child);
+        children.Add(_child);
     }
 
-    public virtual Status Process(bool isInterrupted = false) 
+    public virtual Status Process(bool _isInterrupted = false) 
     {
-        return children[currentChild].Process(isInterrupted);
+        return children[currentChild].Process(_isInterrupted);
     }
 
     public virtual void Reset()
     {
         currentChild = 0;
-        foreach(Node child in children)
+        foreach(Node _child in children)
         {
-            child.Reset();
+            _child.Reset();
         }
     }
 }

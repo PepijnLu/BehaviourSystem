@@ -4,14 +4,11 @@ using UnityEngine;
 
 public class UntilFail : Node
 {
-    public UntilFail(string name) : base(name)
-    {
+    public UntilFail(string _name) : base(_name) {}
 
-    }
-
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
-        if(children[0].Process(isInterrupted) == Status.Failure)
+        if(children[0].Process(_isInterrupted) == Status.Failure)
         {
             Reset();
             return Status.Failure;

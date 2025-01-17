@@ -5,10 +5,10 @@ using UnityEngine;
 
 public interface IAgent
 {
-    TextMeshProUGUI getDisplayText();
-    void setCurrentActiveLeaf(string leafName);
-    Transform getTransform();
-    void setIsStunned();
-    void DropWeapon();
     Weapon GetWeapon();
+    TextMeshProUGUI GetDisplayText();
+    Transform GetTransform();
+    void SetCurrentActiveLeaf(string leafName);
+    void SetIsStunned();
+    void DropWeapon();
 }

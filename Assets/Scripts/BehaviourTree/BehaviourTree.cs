@@ -5,16 +5,13 @@ using UnityEngine;
 
 public class BehaviourTree : Node
 {
-    public BehaviourTree(string name) : base(name)
-    {
+    public BehaviourTree(string _name) : base(_name) {}
 
-    }
-
-    public override Status Process(bool isInterrupted = false)
+    public override Status Process(bool _isInterrupted = false)
     {
         while (currentChild < children.Count)
         {
-            Status status = children[currentChild].Process(isInterrupted);
+            Status status = children[currentChild].Process(_isInterrupted);
             if(status != Status.Success)
             {
                 return status;

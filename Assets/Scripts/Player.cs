@@ -7,15 +7,16 @@ using UnityEngine.AI;
 
 public class Player : MonoBehaviour, IAgent, IEnemyAttackable
 {
-    public Camera mainCamera;
-    public NavMeshAgent playerAgent; 
-    public List<GameObject> attackingAgents = new();
-    public bool isInDanger, isBeingAttacked;
-    [SerializeField] LayerMask ground;
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private LayerMask ground;
+    private NavMeshAgent playerAgent; 
+    private List<GameObject> attackingAgents = new();
+    private bool isBeingAttacked;
+    private float health = 10;
 
     void Start()
     {
-        
+        playerAgent = GetComponent<NavMeshAgent>();
     }
 
     void Update()
@@ -36,52 +37,65 @@ public class Player : MonoBehaviour, IAgent, IEnemyAttackable
             }
         }
     }
-    
-    void IEnemyAttackable.setIsInDanger(bool _isInDanger)
+
+    void Die()
     {
-        isInDanger = _isInDanger;
+        gameObject.SetActive(false);
     }
 
-    void IEnemyAttackable.setIsBeingAttacked(bool _isBeingAttacked)
+    float IEnemyAttackable.GetHealth()
+    {
+        return health;
+    }
+
+    void IEnemyAttackable.SetHealth(float _health)
+    {
+        health = _health;
+
+        if(health < 0)
+        {
+            Die();
+        }
+    }
+    
+    void IEnemyAttackable.SetIsBeingAttacked(bool _isBeingAttacked)
     {
         isBeingAttacked = _isBeingAttacked;
     }
 
-    void IEnemyAttackable.SetAttackingAgent(GameObject agent, bool add)
+    void IEnemyAttackable.SetAttackingAgent(GameObject _agent, bool _add)
     {
-        if(add)
+        if(_add)
         {
-            if(!attackingAgents.Contains(agent))
+            if(!attackingAgents.Contains(_agent))
             {
-                attackingAgents.Add(agent);
+                attackingAgents.Add(_agent);
             }
         }
         else
         {
-            if(attackingAgents.Contains(agent))
+            if(attackingAgents.Contains(_agent))
             {
-                attackingAgents.Remove(agent);
+                attackingAgents.Remove(_agent);
             }
         }
-
-        if(attackingAgents.Count > 0) isInDanger = true;
     }
     GameObject IEnemyAttackable.GetAttackingAgent()
     {
         if(attackingAgents.Count <= 0) return null;
         return attackingAgents[0];
     }
-    Transform IAgent.getTransform()
+    Transform IAgent.GetTransform()
     {
         return transform;
     }
 
-    Transform IEnemyAttackable.getTransform()
+    Transform IEnemyAttackable.GetTransform()
     {
         return transform;
     }
 
-    bool IEnemyAttackable.getIsBeingAttacked()
+    bool IEnemyAttackable.GetIsBeingAttacked()
     {
         return isBeingAttacked;
     }
@@ -90,12 +104,12 @@ public class Player : MonoBehaviour, IAgent, IEnemyAttackable
     {
         return null;
     }
-    TextMeshProUGUI IAgent.getDisplayText()
+    TextMeshProUGUI IAgent.GetDisplayText()
     {
         return null;   
     }
 
-    void IAgent.setIsStunned()
+    void IAgent.SetIsStunned()
     {
         //Noop
     }
@@ -105,9 +119,15 @@ public class Player : MonoBehaviour, IAgent, IEnemyAttackable
         //Noop
     }
 
-    void IAgent.setCurrentActiveLeaf(string leafName)
+    void IAgent.SetCurrentActiveLeaf(string _leafName)
     {
         //Noop
     }
+
+    void IEnemyAttackable.SetIsInDanger(bool _isInDanger)
+    {
+        //Noop
+    }
+
 }
 

@@ -5,13 +5,13 @@ using UnityEngine;
 
 public class Leaf : Node
 {
-    readonly IStrategy strategy;
-    new readonly string name;
+    private readonly IStrategy strategy;
+    new private readonly string name;
 
-    public Leaf(string name, IStrategy strategy, int priority = 0) : base(name, priority)
+    public Leaf(string _name, IStrategy _strategy, int _priority = 0) : base(_name, _priority)
     {
-        this.strategy = strategy;
-        this.name = name;
+        strategy = _strategy;
+        name = _name;
     }
 
     public override Status Process(bool isInterrupted)

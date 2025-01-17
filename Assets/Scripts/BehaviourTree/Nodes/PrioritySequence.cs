@@ -7,10 +7,7 @@ public class PrioritySequence : Sequence
 {
     List<Node> sortedChildren;
 
-    public PrioritySequence(string name, int priority = 0) : base(name, priority)
-    {
-
-    }
+    public PrioritySequence(string _name, int _priority = 0) : base(_name, _priority) {}
     List<Node> SortedChildren()
     {
         if(sortedChildren == null)
@@ -32,18 +29,18 @@ public class PrioritySequence : Sequence
         sortedChildren = null;
     }
 
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
         if(currentChild < SortedChildren().Count)
         {
-            switch(sortedChildren[currentChild].Process(isInterrupted))
+            switch(sortedChildren[currentChild].Process(_isInterrupted))
             {
                 case Status.Running:
                     Debug.Log($"Current Node PrioSeq: {sortedChildren[currentChild].name}");
                     bool anotherSuccess = false;
                     for(int i = 0; i < currentChild; i++)
                     {
-                        if(sortedChildren[i].Process(isInterrupted) != Status.Failure)
+                        if(sortedChildren[i].Process(_isInterrupted) != Status.Failure)
                         {
                             anotherSuccess = true;
                         }

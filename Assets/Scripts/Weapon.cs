@@ -6,14 +6,15 @@ public class Weapon : MonoBehaviour
 {
     [SerializeField] GameObject muzzleFlash;
     public float fireRate = 0.5f;  
-    public float damage = 10f;    
+    public float damage = 1f;    
     private float lastFiredTime; 
 
-    public void Fire()
+    public void Fire(IEnemyAttackable enemyAttackable)
     {
         if (Time.time - lastFiredTime < fireRate) return;
         lastFiredTime = Time.time;
 
+        enemyAttackable.SetHealth(enemyAttackable.GetHealth() - damage);
         StartCoroutine(FireCR());
     }
 

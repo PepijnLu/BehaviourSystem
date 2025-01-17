@@ -4,21 +4,19 @@ using UnityEngine;
 
 public class Sequence : Node
 {
-    public Sequence(string name, int priority = 0) : base(name, priority)
-    {
+    public Sequence(string _name, int _priority = 0) : base(_name, _priority) {}
 
-    }
-
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
         if(currentChild < children.Count)
         {
-            switch(children[currentChild].Process(isInterrupted))
+            switch(children[currentChild].Process(_isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;
                 case Status.Failure:
                     Reset();
+                    Debug.Log($"Sequence {name} failed at {children[currentChild].name}");
                     return Status.Failure;
                 default:
                     currentChild++;

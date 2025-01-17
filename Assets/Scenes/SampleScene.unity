@@ -411,18 +411,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smokeGrenade: {fileID: 5852937295750074006, guid: 452c5c3d4efda02469541c5973d07666, type: 3}
+  agentToHelp: {fileID: 1601434640}
   ignoreInRaycast:
     serializedVersion: 2
     m_Bits: 320
   nearestCover: {fileID: 1431333482}
-  agentToHelp: {fileID: 1601434640}
   enemiesAttackingWard: []
   displayText: {fileID: 1225459664}
-  hoverRangeMin: 13.24
-  hoverRangeMax: 19.29
-  currentActiveLeaf: 
+  hoverRangeMin: 7.12
+  hoverRangeMax: 12.42
   arcHeight: 5
   speed: 10
+  currentActiveLeaf: 
 --- !u!195 &83015344
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -833,7 +833,7 @@ GameObject:
   - component: {fileID: 333623349}
   - component: {fileID: 333623355}
   m_Layer: 6
-  m_Name: PatrollingEnemy
+  m_Name: Guard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -865,12 +865,10 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 256
+  displayText: {fileID: 625305644}
   attackRange: 5
   chaseRange: 100
-  displayText: {fileID: 625305644}
-  isInDanger: 1
   currentActiveLeaf: 
-  isStunned: 0
 --- !u!195 &333623350
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1645,8 +1643,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzleFlash: {fileID: 1993072450}
-  fireRate: 0.5
-  damage: 10
+  fireRate: 0.1
+  damage: 0.1
 --- !u!1 &901031142
 GameObject:
   m_ObjectHideFlags: 0
@@ -1827,7 +1825,6 @@ GameObject:
   - component: {fileID: 963194228}
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
-  - component: {fileID: 963194229}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1902,26 +1899,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.38223907, y: 0.59488934, z: -0.38223907, w: -0.59488934}
-  m_LocalPosition: {x: 17.04, y: 13.48, z: -2.42}
+  m_LocalRotation: {x: -0.42178404, y: 0.52619445, z: -0.3381001, w: -0.65643436}
+  m_LocalPosition: {x: 16.405, y: 8.73, z: -2.69}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 65.445, y: 270, z: 0}
---- !u!114 &963194229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10454dfc502cd4448a0264743e9ada0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 1601434645}
+  m_LocalEulerAnglesHint: {x: 65.445, y: 282.569, z: 0}
 --- !u!1 &964725023
 GameObject:
   m_ObjectHideFlags: 0
@@ -2303,8 +2287,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzleFlash: {fileID: 17819764}
-  fireRate: 0.5
-  damage: 10
+  fireRate: 0.25
+  damage: 0.25
 --- !u!1 &1054059379
 GameObject:
   m_ObjectHideFlags: 0
@@ -2350,8 +2334,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzleFlash: {fileID: 537545375}
-  fireRate: 0.5
-  damage: 10
+  fireRate: 2
+  damage: 2
 --- !u!1 &1219226101
 GameObject:
   m_ObjectHideFlags: 0
@@ -3003,7 +2987,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   muzzleFlash: {fileID: 1835479405}
   fireRate: 0.5
-  damage: 10
+  damage: 0.5
 --- !u!1 &1492979425
 GameObject:
   m_ObjectHideFlags: 0
@@ -3244,10 +3228,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 963194227}
-  playerAgent: {fileID: 1601434646}
-  attackingAgents: []
-  isInDanger: 0
-  isBeingAttacked: 0
   ground:
     serializedVersion: 2
     m_Bits: 512

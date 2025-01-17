@@ -11,19 +11,13 @@ public class RandomSelector : PrioritySelector
         return children.OrderBy(_ => random.Next()).ToList();
     }
 
-    public RandomSelector(string name, int priority = 0) : base(name, priority)
-    {
-
-    }
+    public RandomSelector(string _name, int _priority = 0) : base(_name, _priority) {}
 }
 public class PrioritySelector : Selector
 {
     List<Node> sortedChildren;
 
-    public PrioritySelector(string name, int priority = 0) : base(name, priority)
-    {
-
-    }
+    public PrioritySelector(string _name, int _priority = 0) : base(_name, _priority) {}
     List<Node> SortedChildren()
     {
         if(sortedChildren == null)
@@ -44,11 +38,11 @@ public class PrioritySelector : Selector
         sortedChildren = null;
     }
 
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
         foreach(Node child in SortedChildren())
         {
-            switch(child.Process(isInterrupted))
+            switch(child.Process(_isInterrupted))
             {
                 case Status.Running:
                     return Status.Running;

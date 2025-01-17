@@ -4,10 +4,12 @@ using UnityEngine;
 
 public interface IEnemyAttackable
 {
-    public void SetAttackingAgent(GameObject agent, bool add);
     public GameObject GetAttackingAgent();
-    Transform getTransform();
-    public void setIsInDanger(bool _isInDanger);
-    public void setIsBeingAttacked(bool _isBeingAttacked);
-    public bool getIsBeingAttacked();
+    public Transform GetTransform();
+    public bool GetIsBeingAttacked();
+    public float GetHealth();
+    public void SetHealth(float _health);
+    public void SetIsInDanger(bool _isInDanger);
+    public void SetIsBeingAttacked(bool _isBeingAttacked);
+    public void SetAttackingAgent(GameObject _agent, bool _add);
 }

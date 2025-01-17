@@ -9,22 +9,20 @@ using TMPro;
 
 public class Guard : MonoBehaviour, IAgent
 {
-    [SerializeField] List<Transform> waypoints = new();
-    [SerializeField] Transform safeSpot, weaponLocation, raycastOrigin;
-    [SerializeField] GameObject collectableObject, collectableObject2, player;
-    [SerializeField] LayerMask playerLayer;
-    [SerializeField] float attackRange, chaseRange = 5;
-    [SerializeField] TextMeshProUGUI displayText;
-    NavMeshAgent agent;
-    BehaviourTree tree;
-    Weapon weaponToGet, equippedWeapon;
-    [SerializeField] bool isInDanger;
-    bool hasWeapon;
-    Dictionary<string, Func<bool>> strategyBreaks;
+    [SerializeField] private List<Transform> waypoints = new();
+    [SerializeField] private Transform safeSpot, weaponLocation, raycastOrigin;
+    [SerializeField] private GameObject collectableObject, collectableObject2, player;
+    [SerializeField] private LayerMask playerLayer;
+    [SerializeField] private TextMeshProUGUI displayText;
+    [SerializeField] private float attackRange, chaseRange = 5;
+    private Dictionary<string, Func<bool>> strategyBreaks;
+    private NavMeshAgent agent;
+    private BehaviourTree tree;
+    private Weapon weaponToGet, equippedWeapon;
+    private IEnemyAttackable target;
+    private Coroutine timerRoutine;
+    private bool isInDanger, isStunned, hasWeapon;
     public string currentActiveLeaf;
-    IEnemyAttackable target;
-    public bool isStunned;
-    Coroutine timerRoutine;
 
     private void Awake()
     {
@@ -39,34 +37,6 @@ public class Guard : MonoBehaviour, IAgent
         AddStrategyBreaks();
     }
 
-    TextMeshProUGUI IAgent.getDisplayText()
-    {
-        return displayText;
-    }
-
-    void IAgent.setCurrentActiveLeaf(string leafName)
-    {
-        currentActiveLeaf = leafName;
-    }
-
-    Transform IAgent.getTransform()
-    {
-        return transform;
-    }
-
-    void IAgent.setIsStunned()
-    {
-        Debug.Log("Get Stunned: " + gameObject.name);
-        isStunned = true;
-        if(timerRoutine == null) timerRoutine = StartCoroutine(StunTimer(5f));
-        else
-        { 
-            StopCoroutine(timerRoutine);
-            timerRoutine = StartCoroutine(StunTimer(5f));
-        }
-            
-    }
-
     private void GuardBehaviour()
     {
         PrioritySequence actions = new PrioritySequence("Guard Logic");
@@ -75,12 +45,11 @@ public class Guard : MonoBehaviour, IAgent
             tryAddWeapon.AddChild(new Leaf("CheckIfHasWeapon", new Condition(() => !hasWeapon)));
             tryAddWeapon.AddChild(new Leaf("FindClosestWeapon", new ActionStrategy(() => weaponToGet = GetClosestWeapon())));
             tryAddWeapon.AddChild(new Leaf("MoveToWeapon", new MoveToTarget(gameObject, gameObject.transform, agent, weaponLocation, 5f)));
-            //tryAddWeapon.AddChild(new Leaf("Pickup Weapon", new ActionStrategy(() => hasWeapon = true)));
             tryAddWeapon.AddChild(new Leaf("Pickup Weapon", new ActionStrategy(() => EquipWeapon())));
 
-        Sequence attackPlayer = new Sequence("AttackPlayer", 10);
+        Sequence attackPlayer = new Sequence("AttackPlayerSequence", 10);
             attackPlayer.AddChild(new Leaf("CheckInAttackRange", new Condition(() => CalculateDistanceToPlayer() <= attackRange)));
-            attackPlayer.AddChild(new Leaf("SetBeingAttacked", new ActionStrategy(() => target.setIsBeingAttacked(true))));
+            attackPlayer.AddChild(new Leaf("SetBeingAttacked", new ActionStrategy(() => target.SetIsBeingAttacked(true))));
             attackPlayer.AddChild(new Leaf("AttackPlayer", new AttackTarget(gameObject, gameObject.transform, agent, player.transform, 5f)));
 
         Sequence chasePlayer = new Sequence("ChasePlayer", 5);
@@ -95,25 +64,22 @@ public class Guard : MonoBehaviour, IAgent
         Sequence tryNoticePlayer = new Sequence("NoticePlayer", 10);
             tryNoticePlayer.AddChild(new Leaf("CanSeePlayer", new Condition(() => TryHitRaycast())));
             tryNoticePlayer.AddChild(new Leaf("SetTarget", new ActionStrategy(() => target.SetAttackingAgent(gameObject, true))));
-            tryNoticePlayer.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => target.setIsInDanger(true))));
+            tryNoticePlayer.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => target.SetIsInDanger(true))));
             tryNoticePlayer.AddChild(grabWeaponOrChase);
 
         Sequence beStunned = new Sequence("BeStunned", 15);
             beStunned.AddChild(new Leaf("CheckIfStunned", new Condition(() => isStunned)));
             beStunned.AddChild(new Leaf("BeStunned", new BeStunned(gameObject, agent)));
+            beStunned.AddChild(new Leaf("BackToWaypoint", new MoveToTarget(gameObject, transform, agent, waypoints[0], 2f)));
 
         actions.AddChild(tryNoticePlayer);
         actions.AddChild(beStunned);
 
-        //Sequence patrolPlayer = new Sequence("PatrolPlayer", 0);
-
-
         //Patrol leaf with the default priority of 0
         Sequence patrol = new Sequence("Patrol");
-            patrol.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => target.setIsInDanger(false))));
-            //patrol.AddChild(new Leaf("Settarget", new ActionStrategy(() => target = null)));
+            patrol.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => target.SetIsInDanger(false))));
             patrol.AddChild(new Leaf("Patrol", new PatrolStrategy(gameObject, transform, agent, waypoints, 2f)));
-        // Leaf patrol = new Leaf("Patrol", new PatrolStrategy(this, transform, agent, waypoints, 2f));
+
         actions.AddChild(patrol);
 
         tree.AddChild(actions);
@@ -137,14 +103,11 @@ public class Guard : MonoBehaviour, IAgent
 
     bool TryHitRaycast()
     {
-        //return true;
-
         Debug.Log("Guard tries to hit raycast");
-        // Calculate the direction from objectA to objectB
+
         Vector3 startPos = raycastOrigin.position;
         Vector3 direction = player.transform.position - startPos;
 
-        // Perform the raycast
         RaycastHit hit;
         Debug.DrawRay(startPos, direction, Color.red);
 
@@ -158,10 +121,8 @@ public class Guard : MonoBehaviour, IAgent
             }
             else
             {
-                // Calculate the angle between objectA's forward vector and the direction to objectB
                 float angle = Vector3.Angle(transform.forward, direction);
 
-                // Log the angle to the console
                 Debug.Log("Angle between ObjectA's forward vector and the direction to ObjectB: " + angle + " degrees");
 
                 if(angle < 120)
@@ -177,7 +138,7 @@ public class Guard : MonoBehaviour, IAgent
         }
         else
         {
-            Debug.DrawRay(startPos, direction * 100, Color.blue); // Draw a ray indicating no hit
+            Debug.DrawRay(startPos, direction * 100, Color.blue); 
             Debug.Log("Raycast did not hit any object on the specified LayerMask.");
         }
         //Debug.Log("Guard misses raycast");
@@ -220,12 +181,6 @@ public class Guard : MonoBehaviour, IAgent
         if(strategyBreaks[currentActiveLeaf]()) return true;
         return false;
     }
-
-    Weapon IAgent.GetWeapon()
-    {
-        return equippedWeapon;
-    }
-
     void AddStrategyBreaks()
     {
         strategyBreaks = new()
@@ -233,8 +188,8 @@ public class Guard : MonoBehaviour, IAgent
             ["GoToObject1"] = () => !collectableObject.activeSelf,
             ["GoToObject2"] = () => !collectableObject2.activeSelf,
             ["GoToSafety"] = () => !isInDanger,
-            ["MoveToPlayer"] = () => CalculateDistanceToPlayer() <= attackRange || CalculateDistanceToPlayer() >= chaseRange,
-            ["AttackPlayer"] = () => CalculateDistanceToPlayer() >= attackRange || isStunned,
+            ["MoveToPlayer"] = () => CalculateDistanceToPlayer() <= attackRange || CalculateDistanceToPlayer() >= chaseRange || !player.activeSelf,
+            ["AttackPlayer"] = () => CalculateDistanceToPlayer() >= attackRange || isStunned || !player.activeSelf,
 
             ["BeStunned"] = () => !isStunned
         };
@@ -249,5 +204,37 @@ public class Guard : MonoBehaviour, IAgent
             yield return new WaitForFixedUpdate();
         }
         isStunned = false;
+    }
+
+    void IAgent.SetIsStunned()
+    {
+        Debug.Log("Get Stunned: " + gameObject.name);
+        isStunned = true;
+        if(timerRoutine == null) timerRoutine = StartCoroutine(StunTimer(5f));
+        else
+        { 
+            StopCoroutine(timerRoutine);
+            timerRoutine = StartCoroutine(StunTimer(5f));
+        }
+            
+    }
+    void IAgent.SetCurrentActiveLeaf(string leafName)
+    {
+        currentActiveLeaf = leafName;
+    }
+    TextMeshProUGUI IAgent.GetDisplayText()
+    {
+        return displayText;
+    }
+
+    Transform IAgent.GetTransform()
+    {
+        return transform;
+    }
+
+
+    Weapon IAgent.GetWeapon()
+    {
+        return equippedWeapon;
     }
 }

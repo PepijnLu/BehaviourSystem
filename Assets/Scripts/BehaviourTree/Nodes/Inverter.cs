@@ -4,15 +4,14 @@ using UnityEngine;
 
 public class Inverter : Node
 {
-    public Inverter(string name) : base(name)
+    public Inverter(string _name) : base(_name)
     {
 
     }   
 
-    public override Status Process(bool isInterrupted)
+    public override Status Process(bool _isInterrupted)
     {
-        //Possibly extend this to work for multiple children
-        switch(children[0].Process(isInterrupted))
+        switch(children[0].Process(_isInterrupted))
         {
             case Status.Running:
                 return Status.Running;
