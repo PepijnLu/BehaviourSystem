@@ -4,8 +4,8 @@ using UnityEngine;
 public class Weapon : MonoBehaviour
 {
     [SerializeField] GameObject muzzleFlash;
-    public float fireRate = 0.5f;  
-    public float damage = 1f;    
+    private float fireRate = 0.5f;  
+    private float damage = 1f;    
     private float lastFiredTime; 
 
     public void Fire(IEnemyAttackable enemyAttackable)
