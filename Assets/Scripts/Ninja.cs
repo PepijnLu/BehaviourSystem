@@ -60,12 +60,14 @@ public class Ninja : MonoBehaviour, IAgent
             followPlayer.AddChild(new Leaf("CheckInHoverRange", new Condition(() => CalculateDistanceToPlayer() >= hoverRangeMin)));
             followPlayer.AddChild(new Leaf("FollowPlayer", new MoveToTarget(gameObject, gameObject.transform, agent, iPlayerAgent.GetTransform(), 5f)));
 
-        Sequence idle = new Sequence("Idle");
-            idle.AddChild(new Leaf("Idle", new Idle(gameObject, agent)));
+        // Sequence idle = new Sequence("Idle");
+        //     idle.AddChild(new Leaf("Idle", new Idle(gameObject, agent)));
+
 
         actions.AddChild(moveToCover);
         actions.AddChild(followPlayer);
-        actions.AddChild(idle);
+        actions.AddChild(new Leaf("Idle", new Idle(gameObject, agent)));
+
         tree.AddChild(actions);
     }
 
