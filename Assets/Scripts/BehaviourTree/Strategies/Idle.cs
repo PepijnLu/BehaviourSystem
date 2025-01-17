@@ -1,14 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class Idle : IStrategy
 {
     IAgent runnerInterface;
-    GameObject runner;
     public Idle(GameObject runner, NavMeshAgent _agent)
     {
         if(_agent.TryGetComponent(out IAgent _runnerInterface))
@@ -16,8 +12,6 @@ public class Idle : IStrategy
             runnerInterface = _runnerInterface;
         }
         else throw new Exception($"Runner {runner.name} isn't an agent");
-
-        this.runner = runner;
     }
 
     public Node.Status Process(bool isInterrupted, string leafName)
@@ -40,7 +34,7 @@ public class Idle : IStrategy
 
     public void Reset()
     {
-
+        //Noop
     }
     
 }

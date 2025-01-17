@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Palmmedia.ReportGenerator.Core.Reporting.Builders;
 using UnityEngine;
 using UnityEngine.AI;
 using TMPro;
@@ -32,7 +31,6 @@ public class Guard : MonoBehaviour, IAgent
         tree = new BehaviourTree(GetType().Name);
         target = player.GetComponent<IEnemyAttackable>();
 
-        //Guard Enemy Behaviour
         GuardBehaviour();
         AddStrategyBreaks();
     }
@@ -75,7 +73,6 @@ public class Guard : MonoBehaviour, IAgent
         actions.AddChild(tryNoticePlayer);
         actions.AddChild(beStunned);
 
-        //Patrol leaf with the default priority of 0
         Sequence patrol = new Sequence("Patrol");
             patrol.AddChild(new Leaf("SetInDangerBool", new ActionStrategy(() => target.SetIsInDanger(false))));
             patrol.AddChild(new Leaf("Patrol", new PatrolStrategy(gameObject, transform, agent, waypoints, 2f)));
@@ -141,7 +138,7 @@ public class Guard : MonoBehaviour, IAgent
             Debug.DrawRay(startPos, direction * 100, Color.blue); 
             Debug.Log("Raycast did not hit any object on the specified LayerMask.");
         }
-        //Debug.Log("Guard misses raycast");
+        
         return false;
     }
 

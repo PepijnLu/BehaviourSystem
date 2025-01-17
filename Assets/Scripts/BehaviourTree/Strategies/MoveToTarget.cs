@@ -1,18 +1,12 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class MoveToTarget : IStrategy
 {
-    bool moving;
-    readonly Vector3 targetPosition;
-    readonly GameObject runner;
     readonly Transform entity;
     readonly NavMeshAgent agent;
     readonly Transform targetPoint;
-    readonly float patrolSpeed;
     bool isPathCalculated;
     IAgent runnerInterface;
 
@@ -21,9 +15,7 @@ public class MoveToTarget : IStrategy
         this.entity = entity;
         this.agent = agent;
         this.targetPoint = targetPoint;
-        this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
-        this.runner = runner;
 
         if(agent.TryGetComponent(out IAgent _runnerInterface))
         {

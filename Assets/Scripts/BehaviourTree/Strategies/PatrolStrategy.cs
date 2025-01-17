@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,10 +8,8 @@ public class PatrolStrategy : IStrategy
     readonly Transform entity;
     readonly NavMeshAgent agent;
     readonly List<Transform> patrolPoints;
-    readonly float patrolSpeed;
     int currentIndex;
     bool isPathCalculated, onFirstRoute;
-    GameObject runner;
     IAgent runnerInterface;
 
     public PatrolStrategy(GameObject runner, Transform entity, NavMeshAgent agent, List<Transform> patrolPoints, float patrolSpeed)
@@ -21,9 +17,7 @@ public class PatrolStrategy : IStrategy
         this.entity = entity;
         this.agent = agent;
         this.patrolPoints = patrolPoints;
-        this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
-        this.runner = runner;
         onFirstRoute = true;
 
         
@@ -46,7 +40,6 @@ public class PatrolStrategy : IStrategy
 
         if(currentIndex == patrolPoints.Count) 
         {
-            //currentIndex = 0;
             Reset();
             return Node.Status.Success; 
         }

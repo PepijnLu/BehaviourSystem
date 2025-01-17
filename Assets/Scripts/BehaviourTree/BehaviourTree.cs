@@ -1,8 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using UnityEngine;
-
 public class BehaviourTree : Node
 {
     public BehaviourTree(string _name) : base(_name) {}

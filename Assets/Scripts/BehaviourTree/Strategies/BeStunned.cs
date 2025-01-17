@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -17,7 +14,7 @@ public class BeStunned : IStrategy
         }
         else throw new Exception($"Runner {runner.name} isn't an agent");
 
-        this.runner = _runner;
+        runner = _runner;
     }
 
     public Node.Status Process(bool isInterrupted, string leafName)
@@ -37,7 +34,7 @@ public class BeStunned : IStrategy
 
     public void Reset()
     {
-
+        //Noop
     }
     
 }

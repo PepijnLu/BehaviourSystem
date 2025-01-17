@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -12,7 +9,6 @@ public class AttackTarget : IStrategy
     readonly NavMeshAgent agent;
     readonly Transform targetPoint;
     readonly IEnemyAttackable enemyAttackable;
-    readonly float patrolSpeed;
     bool isPathCalculated;
     IAgent runnerInterface;
 
@@ -21,7 +17,6 @@ public class AttackTarget : IStrategy
         this.entity = entity;
         this.agent = agent;
         this.targetPoint = targetPoint;
-        this.patrolSpeed = patrolSpeed;
         this.agent.speed = patrolSpeed;
         this.runner = runner;
 

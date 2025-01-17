@@ -1,13 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class Inverter : Node
 {
-    public Inverter(string _name) : base(_name)
-    {
-
-    }   
+    public Inverter(string _name) : base(_name) {}   
 
     public override Status Process(bool _isInterrupted)
     {

@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class Selector : Node
 {
     public Selector(string _name, int _priority = 0) : base(_name, _priority) {}

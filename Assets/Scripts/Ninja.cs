@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using TMPro;
@@ -36,7 +35,6 @@ public class Ninja : MonoBehaviour, IAgent
             Debug.Log("Player Agent = " + iPlayerAgent);
         }
 
-        //Ninja Behaviour
         NinjaBehaviour();
         AddStrategyBreaks();
     }

@@ -1,10 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.AI;
-
 public class ActionStrategy : IStrategy
 {
     readonly Action doSomething;
